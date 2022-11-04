@@ -14,3 +14,13 @@ EJS
  app.set('view engine', 'ejs');
 
  list.ejs
+
+From Javascript to HTML
+
+1. Get 
+
+2. Post 
+
+3. Delete 
+
+1) Ajax

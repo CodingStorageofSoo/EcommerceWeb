@@ -29,18 +29,11 @@
       </button>
     </div>
 
-    <script>
-      $("#search").click(function () {
-        var 입력한값 = $("#search-input").val();
-        console.log(입력한값);
-        window.location.replace("/search?value=" + 입력한값);
-      });
-    </script>
-
     <div class="container">
       <ul class="list-group">
         <% for (var i = 0; i < posts.length; i++){ %>
         <li class="list-group-item">
+          <p>글번호 : <%= posts[i]._id %></p>
           <h4>할일 제목 : <%= posts[i].title %></h4>
           <p>할일 마감날짜 : <%= posts[i].date %></p>
           <button

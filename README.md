@@ -1,26 +1,56 @@
 # RestAPIWithMongoDB
 
-1. Library & Tool 
+1. Library & Tool
 
-1) 
+1)
 
-2) 
+2)
 
+### Page Description
 
-EJS 
+1. Home
 
-1) embed JavaScript code in a template language that is then used to generate HTML.
+localhost:8080
 
- app.set('view engine', 'ejs');
+2. /write
 
- list.ejs
+3. /list
 
-From Javascript to HTML
+EJS
 
-1. Get 
+1. embed JavaScript code in a template language that is then used to generate HTML.
 
-2. Post 
+app.set('view engine', 'ejs');
 
-3. Delete 
+list.ejs
 
-1) Ajax
+### From Javascript to HTML
+
+#### CRUD Commend
+
+1. Get
+
+2. Post
+
+3. Delete
+
+1) Way1. Ajax
+
+4. Put
+
+1) Way2. method-overide
+
+   npm install method-override
+
+#### 22. Types of Authentication
+
+1. Session-based Authentication
+
+2. JSON Web Token
+   -stateless
+
+3. Open Autentication
+
+#### 23. Authentication by Session
+
+1. library : passport & passport-local & express-session

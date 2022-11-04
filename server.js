@@ -3,6 +3,8 @@ const app = express();
 const bodyParser = require("body-parser");
 const MongoClient = require("mongodb").MongoClient;
 
+app.set("view engine", "ejs");
+
 app.use(bodyParser.urlencoded({ extended: true }));
 
 var db;
@@ -54,3 +56,6 @@ app.post("/add", function (req, res) {
   );
 });
 
+app.get("/list", function (req, res) {
+  res.render("list.ejs");
+});

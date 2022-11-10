@@ -6,6 +6,8 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 const MongoClient = require("mongodb").MongoClient;
 
+const { ObjectId } = require("mongodb");
+
 const methodOverride = require("method-override");
 app.use(methodOverride("_method"));
 
@@ -233,3 +235,36 @@ app.get("/shop/shirts", function (요청, 응답) {
 app.get("/shop/pants", function (요청, 응답) {
   응답.send("바지 파는 페이지입니다.");
 });
+
+app.post("/chatroom", function (req, res) {
+  var 저장할거 = {
+    title: "무슨 무슨 채팅방",
+    memeber: [ObjectId(req.body.당한사람), req.user._id],
+    data: new Date(),
+  };
+  db.collection("chatroom")
+    .insertOne()
+    .then((result) => {});
+});
+
+app.get("/chat", function (req, res) {
+  db.collection("chatroom")
+    .find({ member: req.user._id })
+    .toArray()
+    .then((result) => {
+      res.render("chat.ejs", { data: result });
+    });
+});
+
+app.post('/message', 로그인했니, function(요청, 응답){
+  var 저장할거 = {
+    parent : 요청.body.parent,
+    userid : 요청.user._id,
+    content : 요청.body.content,
+    date : new Date(),
+  }
+  db.collection('message').insertOne(저장할거)
+  .then((결과)=>{
+    응답.send(결과);
+  })
+}); 

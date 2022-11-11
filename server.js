@@ -15,6 +15,28 @@ app.set("view engine", "ejs");
 
 app.use("/public", express.static("public"));
 
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const session = require("express-session");
+
+app.use(session({ secret: "XXXX", resave: true, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+const flash = require("connect-flash");
+
+app.use(flash());
+
+// app.get("/flash", function (req, res) {
+//   console.log("d");
+//   req.flash("message", "Welcome to Blog");
+//   res.redirect("/display-message");
+// });
+
+// app.get("/display-message", (req, res) => {
+//   res.send(req.flash("message"));
+// });
+
 var db;
 
 MongoClient.connect(process.env.DB_URL, function (error, client) {
@@ -29,21 +51,97 @@ MongoClient.connect(process.env.DB_URL, function (error, client) {
   });
 });
 
-app.get("/", function (request, response) {
-  response.sendFile(__dirname + "/index.html");
+//// SignIn & SignUp
+
+app.get("/login", function (req, res) {
+  res.render("login.ejs");
 });
 
-app.get("/write", function (req, res) {
-  res.render("write.ejs");
+app.post(
+  "/login",
+  passport.authenticate("local", {
+    failureRedirect: "/login",
+    failureMessage: true,
+  }),
+  function (req, res) {
+    res.redirect("/");
+  }
+);
+
+function Login(req, res, next) {
+  if (req.user) {
+    next();
+  } else {
+    res.render("login.ejs");
+  }
+}
+
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: "id",
+      passwordField: "pw",
+      session: true,
+      passReqToCallback: false,
+    },
+    function (inputId, inputPs, done) {
+      db.collection("login").findOne({ id: inputId }, function (error, result) {
+        console.log(result, inputId, inputPs);
+        if (error) return done(error);
+        if (!result) return done(null, false, { message: "There is no ID" });
+        if (inputPs == result.pw) {
+          return done(null, result);
+        } else {
+          return done(null, false, { message: "Wrong Password" });
+        }
+      });
+    }
+  )
+);
+
+passport.serializeUser(function (user, done) {
+  done(null, user.id);
 });
 
-app.get("/list", function (req, res) {
+passport.deserializeUser(function (아이디, done) {
+  db.collection("login").findOne({ id: 아이디 }, function (에러, 결과) {
+    done(null, 결과);
+  });
+});
+
+app.post("/register", function (req, res) {
+  db.collection("login").insertOne(
+    { id: req.body.id, pw: req.body.pw },
+    function (error, result) {
+      res.redirect("/");
+    }
+  );
+});
+
+app.get("/mypage", Login, function (req, res) {
+  res.render("mypage.ejs", { User: req.user });
+});
+
+///
+
+app.get("/", Login, function (req, res) {
   db.collection("post")
     .find()
     .toArray(function (error, result) {
-      console.log(result);
       res.render("list.ejs", { posts: result });
     });
+});
+
+app.get("/list", Login, function (req, res) {
+  db.collection("post")
+    .find()
+    .toArray(function (error, result) {
+      res.render("list.ejs", { posts: result });
+    });
+});
+
+app.get("/write", Login, function (req, res) {
+  res.render("write.ejs");
 });
 
 app.get("/detail/:id", function (req, res) {
@@ -78,88 +176,6 @@ app.put("/edit", function (req, res) {
       }
       console.log("complete!");
       res.redirect("/list");
-    }
-  );
-});
-
-const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
-const session = require("express-session");
-
-app.use(
-  session({ secret: "비밀코드", resave: true, saveUninitialized: false })
-);
-app.use(passport.initialize());
-app.use(passport.session());
-
-app.get("/login", function (req, res) {
-  res.render("login.ejs");
-});
-
-app.post(
-  "/login",
-  passport.authenticate("local", { failureRedirect: "/fail" }),
-  function (req, res) {
-    res.redirect("/");
-  }
-);
-
-app.get("/mypage", Login, function (req, res) {
-  console.log(req.user);
-  res.render("mypage.ejs");
-});
-
-function Login(req, res, next) {
-  if (req.user) {
-    next();
-  } else {
-    res.send("You do not Login");
-  }
-}
-
-passport.use(
-  new LocalStrategy(
-    {
-      usernameField: "id",
-      passwordField: "pw",
-      session: true,
-      passReqToCallback: false,
-    },
-    function (입력한아이디, 입력한비번, done) {
-      //console.log(입력한아이디, 입력한비번);
-      db.collection("login").findOne(
-        { id: 입력한아이디 },
-        function (에러, 결과) {
-          if (에러) return done(에러);
-
-          if (!결과)
-            return done(null, false, { message: "존재하지않는 아이디요" });
-          if (입력한비번 == 결과.pw) {
-            return done(null, 결과);
-          } else {
-            return done(null, false, { message: "비번틀렸어요" });
-          }
-        }
-      );
-    }
-  )
-);
-
-passport.serializeUser(function (user, done) {
-  done(null, user.id);
-});
-
-passport.deserializeUser(function (아이디, done) {
-  db.collection("login").findOne({ id: 아이디 }, function (에러, 결과) {
-    done(null, 결과);
-  });
-});
-
-app.post("/register", function (req, res) {
-  db.collection("login").insertOne(
-    { id: req.body.id, pw: req.body.pw },
-    function (error, result) {
-      res.redirect("/");
     }
   );
 });
@@ -202,7 +218,6 @@ app.delete("/delete", function (req, res) {
     if (error) {
       return console.log(error);
     }
-    console.log("Finish deleting");
     res.status(200).send({ message: "Success to delete" });
   });
 });
@@ -218,7 +233,6 @@ app.get("/search", (req, res) => {
         },
       },
     },
-    // For sorting the list (DESC)
     { $sort: { _id: -1 } },
   ];
   db.collection("post")
@@ -228,43 +242,86 @@ app.get("/search", (req, res) => {
     });
 });
 
-app.get("/shop/shirts", function (요청, 응답) {
-  응답.send("셔츠 파는 페이지입니다.");
-});
+//// Chatting
 
-app.get("/shop/pants", function (요청, 응답) {
-  응답.send("바지 파는 페이지입니다.");
-});
-
-app.post("/chatroom", function (req, res) {
-  var 저장할거 = {
+app.post("/chatroom", Login, function (req, res) {
+  var data = {
     title: "무슨 무슨 채팅방",
-    memeber: [ObjectId(req.body.당한사람), req.user._id],
+    memeber: { receive: ObjectId(req.body.당한사람), send: req.user._id },
     data: new Date(),
   };
   db.collection("chatroom")
-    .insertOne()
-    .then((result) => {});
-});
-
-app.get("/chat", function (req, res) {
-  db.collection("chatroom")
-    .find({ member: req.user._id })
-    .toArray()
-    .then((result) => {
-      res.render("chat.ejs", { data: result });
+    .insertOne(data)
+    .then(function (result) {
+      res.send("Send");
     });
 });
 
-app.post('/message', 로그인했니, function(요청, 응답){
+// app.get("/chat", function (req, res) {
+//   db.collection("chatroom")
+//     .find({ member: req.user._id })
+//     .toArray()
+//     .then(function (error, result) {
+//       console.log(result.length);
+//       res.render("chat.ejs", { data: result });
+//     });
+// });
+
+app.get("/chat", Login, function (요청, 응답) {
+  db.collection("chatroom")
+    .find({ title: "무슨 무슨 채팅방" })
+    .toArray(function (error, result) {
+      console.log(요청.user._id);
+      console.log(result);
+      응답.render("chat.ejs", { data: result });
+    });
+});
+
+app.post("/message", Login, function (요청, 응답) {
   var 저장할거 = {
-    parent : 요청.body.parent,
-    userid : 요청.user._id,
-    content : 요청.body.content,
-    date : new Date(),
-  }
-  db.collection('message').insertOne(저장할거)
-  .then((결과)=>{
-    응답.send(결과);
-  })
-}); 
+    parent: 요청.body.parent,
+    userid: 요청.user._id,
+    content: 요청.body.content,
+    date: new Date(),
+  };
+  db.collection("message")
+    .insertOne(저장할거)
+    .then((결과) => {
+      응답.send(결과);
+    });
+});
+
+// const changeStream = db.collection('message').watch(찾을문서);
+
+// changeStream.on('change', (result) => {
+//   console.log(result.fullDocument);
+// });
+
+app.get("/message/:parentid", Login, function (요청, 응답) {
+  응답.writeHead(200, {
+    Connection: "keep-alive",
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+  });
+
+  db.collection("message")
+    .find({ parent: 요청.params.parentid })
+    .toArray()
+    .then((결과) => {
+      console.log(결과);
+      console.log("hi");
+      응답.write("event: test\n");
+      응답.write(`data: ${JSON.stringify(결과)}\n\n`);
+    });
+
+  const 찾을문서 = [
+    { $match: { "fullDocument.parent": 요청.params.parentid } },
+  ];
+
+  const changeStream = db.collection("message").watch(찾을문서);
+  changeStream.on("change", (result) => {
+    console.log(result.fullDocument);
+    var 추가된문서 = [result.fullDocument];
+    응답.write(`data: ${JSON.stringify(추가된문서)}\n\n`);
+  });
+});

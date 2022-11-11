@@ -1,5 +1,19 @@
 # RestAPIWithMongoDB
 
+1. This is eBay Project
+
+1) SignIn and Signup
+
+2) Home page
+
+3) Used Product
+
+4) Detail of the product
+
+5) Chat with each other
+
+   with Socket.io
+
 1. Library & Tool
 
 1)
@@ -30,7 +44,11 @@ list.ejs
 
 1. Get
 
+> Request the data from a server
+
 2. Post
+
+> Send the data to a server
 
 3. Delete
 
@@ -54,3 +72,52 @@ list.ejs
 #### 23. Authentication by Session
 
 1. library : passport & passport-local & express-session
+
+2. server.js
+
+1) app.use(middleware)
+
+   (1) passport.initialize()
+
+   (2) passport.session()
+
+   (3) session({
+   secret : XXXX,
+   resave : true,
+   saveUninitialized : false
+   })
+
+2) app.get('/get', function(req, res){
+   res.render('login.ejs')
+   })
+
+3) app.post('/login',
+   passport.authenticate('local', {failureRedirect : '/fail'}), function(req, res){
+   res.redirect('/')
+   });
+   })
+
+4) passport.use(new LocalStrategy(
+
+   {
+   usernameField: 'id',
+   passwordField: 'pw',
+   session: true,
+   passReqToCallback: false,
+   },
+
+   function (ID, PS, done) {
+   db.collection('login').findOne({ id: ID },
+   function (error, result) {
+   if (error) return done(error)
+   if (!result) return done(null, false, { message: 'There is no ID' })
+   if (PS == result.pw) {
+   return done(null, result)
+   } else {
+   return done(null, false, { message: 'Wrong Password' })
+   }
+
+   })
+   }));
+
+4. login.ejs

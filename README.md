@@ -1,24 +1,19 @@
-# RestAPIWithMongoDB
+# Bulletin Board Project
 
-1. This is eBay Project
+## 1. Develping Environment
 
-1) SignIn and Signup
+1. Front-End : JS with EJS
+2. Back-End : NodeJS, ExpressJS
+3. Database : MongoDB
 
-2) Home page
+## 2. Function
 
-3) Used Product
+1. SignIn and SingUp
 
-4) Detail of the product
+2. Add Posts
 
-5) Chat with each other
+3. Chat with Socket.io
 
-   with Socket.io
-
-1. Library & Tool
-
-1)
-
-2)
 
 ### Page Description
 

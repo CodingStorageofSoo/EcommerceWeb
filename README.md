@@ -1,6 +1,6 @@
-# Ecommerce Web
+# E-commerce Web
 
-## 1. Develping Environment
+## 1. Developing Environment
 
 1. Front-End : EmbeddedJS
 2. Back-End : ExpressJS
